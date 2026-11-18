@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ms">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (function () {
+        if (typeof globalThis.Iterator === 'undefined') {
+          var iterProto = Object.getPrototypeOf(
+            Object.getPrototypeOf([][Symbol.iterator]())
+          );
+          function Iterator() {}
+          Iterator.prototype = iterProto;
+          try {
+            Object.defineProperty(iterProto, 'constructor', {
+              value: Iterator,
+              writable: true,
+              configurable: true,
+            });
+          } catch (_) {}
+          Iterator.from = function (iterable) {
+            if (iterable == null) {
+              throw new TypeError('Cannot convert undefined or null to iterator');
+            }
+            if (typeof iterable[Symbol.iterator] === 'function') {
+              return iterable[Symbol.iterator]();
+            }
+            if (typeof iterable.next === 'function') {
+              return iterable;
+            }
+            throw new TypeError('Object is not iterable');
+          };
+          globalThis.Iterator = Iterator;
+        }
+
+        var proto = globalThis.Iterator && globalThis.Iterator.prototype;
+        if (!proto) return;
+
+        function defineHelper(name, fn) {
+          if (typeof proto[name] !== 'function') {
+            try {
+              Object.defineProperty(proto, name, {
+                value: fn,
+                writable: true,
+                configurable: true,
+              });
+            } catch (_) {
+              proto[name] = fn;
+            }
+          }
+        }
+
+        defineHelper('toArray', function () {
+          var res = [];
+          var step;
+          while (!(step = this.next()).done) {
+            res.push(step.value);
+          }
+          return res;
+        });
+
+        defineHelper('forEach', function (fn) {
+          var idx = 0;
+          var step;
+          while (!(step = this.next()).done) {
+            fn(step.value, idx++);
+          }
+        });
+
+        defineHelper('map', function* (fn) {
+          var idx = 0;
+          var step;
+          while (!(step = this.next()).done) {
+            yield fn(step.value, idx++);
+          }
+        });
+
+        defineHelper('filter', function* (fn) {
+          var idx = 0;
+          var step;
+          while (!(step = this.next()).done) {
+            if (fn(step.value, idx++)) {
+              yield step.value;
+            }
+          }
+        });
+
+        defineHelper('take', function* (limit) {
+          var remaining = Number(limit);
+          if (isNaN(remaining) || remaining <= 0) return;
+          var step;
+          while (remaining > 0 && !(step = this.next()).done) {
+            remaining--;
+            yield step.value;
+          }
+        });
+
+        defineHelper('drop', function* (limit) {
+          var remaining = Math.max(0, Number(limit) || 0);
+          var step;
+          while (remaining > 0 && !(step = this.next()).done) {
+            remaining--;
+          }
+          while (!(step = this.next()).done) {
+            yield step.value;
+          }
+        });
+
+        defineHelper('some', function (fn) {
+          var idx = 0;
+          var step;
+          while (!(step = this.next()).done) {
+            if (fn(step.value, idx++)) return true;
+          }
+          return false;
+        });
+
+        defineHelper('every', function (fn) {
+          var idx = 0;
+          var step;
+          while (!(step = this.next()).done) {
+            if (!fn(step.value, idx++)) return false;
+          }
+          return true;
+        });
+
+        defineHelper('find', function (fn) {
+          var idx = 0;
+          var step;
+          while (!(step = this.next()).done) {
+            if (fn(step.value, idx++)) return step.value;
+          }
+          return undefined;
+        });
+
+        defineHelper('reduce', function (fn, initialValue) {
+          var hasInitial = arguments.length >= 2;
+          var acc = initialValue;
+          var idx = 0;
+          var step;
+          if (!hasInitial) {
+            step = this.next();
+            if (step.done) {
+              throw new TypeError('Reduce of empty iterator with no initial value');
+            }
+            acc = step.value;
+            idx = 1;
+          }
+          while (!(step = this.next()).done) {
+            acc = fn(acc, step.value, idx++);
+          }
+          return acc;
+        });
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pejabat 2.0 — Ruang Kerja Digital Malaysia</title>
+    <meta name="description" content="Aplikasi produktiviti minimalist untuk rakyat Malaysia menampilkan Laci Arkib & Kalendar, Lembar 2.0, Surat 2.0, Bentang 2.0, Lukis 2.0, dan Tetapan." />
+    <meta property="og:title" content="Pejabat 2.0 — Ruang Kerja Digital Malaysia" />
+    <meta property="og:description" content="Aplikasi produktiviti minimalist untuk rakyat Malaysia menampilkan Laci Arkib & Kalendar, Lembar 2.0, Surat 2.0, Bentang 2.0, Lukis 2.0, dan Tetapan." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Lobster&family=Pacifico&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alata&family=Audiowide&family=Birthstone&family=Butterfly+Kids&family=Chewy&family=DynaPuff:wght@400;600;700&family=Fira+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Henny+Penny&family=Honk&family=Limelight&family=Parisienne&family=Playpen+Sans+Arabic:wght@400;600;700&family=Rubik+Spray+Paint&display=swap">
+  </head>
+  <body class="bg-white text-[#0A0A0A] antialiased selection:bg-[#0B1D3A] selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

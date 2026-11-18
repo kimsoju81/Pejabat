@@ -1,0 +1,40 @@
+{
+  "background_color": "#0aceff",
+  "description": "Aplikasi produktiviti minimalist untuk rakyat Malaysia menampilkan Laci Arkib &amp; Kalendar, Lembar 2.0, Surat 2.0, Bentang 2.0, Lukis 2.0, Layar 2.0 dan Tetapan.",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Pejabat",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Pejabat",
+  "start_url": "https://pejabat.org/",
+  "theme_color": "#0385d7",
+  "icons": [
+    {
+      "src": "https://pejabat.org/favicon.ico",
+      "type": "image/x-icon",
+      "sizes": "512x512",
+      "isSquare": true,
+      "isPng": false,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 512,
+      "is512x512": true,
+      "is256x256": false,
+      "is192x192": false
+    }
+  ],
+  "id": "org.pejabat.app",
+  "lang": "ms",
+  "categories": [
+    "books",
+    "business",
+    "developer",
+    "education",
+    "finance",
+    "government",
+    "multimedia",
+    "music",
+    "productivity"
+  ]
+}
