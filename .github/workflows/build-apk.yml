@@ -45,21 +45,6 @@ jobs:
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
 
-      - name: Pasang Bubblewrap CLI
-        run: npm install -g @bubblewrap/cli
-
-      - name: Jana Keystore Tandatangan APK
-        run: |
-          keytool -genkeypair -v \
-            -keystore "$GITHUB_WORKSPACE/android.keystore" \
-            -alias pejabatkey \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -storepass pejabat123 \
-            -keypass pejabat123 \
-            -dname "CN=Pejabat, OU=Development, O=Pejabat, L=Melaka, ST=Melaka, C=MY"
-
             - name: Cipta konfigurasi Bubblewrap & Bina APK
         run: |
           mkdir -p "$GITHUB_WORKSPACE/twa-project"
@@ -160,7 +145,6 @@ jobs:
           fi
 
           bubblewrap build --skipPwaValidation
-
 
       - name: Muat Naik Fail APK sebagai Artifact
         uses: actions/upload-artifact@v5
