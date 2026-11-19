@@ -60,9 +60,9 @@ jobs:
             -keypass pejabat123 \
             -dname "CN=Pejabat, OU=Development, O=Pejabat, L=Melaka, ST=Melaka, C=MY"
 
-      - name: Cipta konfigurasi Bubblewrap & Bina APK
+            - name: Cipta konfigurasi Bubblewrap & Bina APK
         run: |
-          mkdir -p "$GITHUB_WORKSPACE/twa-project"
+          mkdir -p "$GITHUB_WORKSPACE/twa-project" "$HOME/.bubblewrap"
           cd "$GITHUB_WORKSPACE/twa-project"
 
           if [ -z "${JAVA_HOME:-}" ]; then
@@ -70,95 +70,94 @@ jobs:
             export JAVA_HOME
           fi
 
+          # Tetapkan konfigurasi laluan JDK & SDK untuk Bubblewrap supaya tidak bertanya secara interaktif
+          cat <<EOF > "$HOME/.bubblewrap/config.json"
           {
-            printf 'n\n%s\nn\n%s\n' "$JAVA_HOME" "$ANDROID_HOME"
-            printf 'n\n%.0s' {1..25}
-          } | bubblewrap init \
-            --manifest="https://kimsoju81.github.io/Pejabat/manifest.json" \
-            --directory="." || true
+            "jdkPath": "$JAVA_HOME",
+            "androidSdkPath": "$ANDROID_HOME"
+          }
+          EOF
 
-          if [ ! -f "$GITHUB_WORKSPACE/twa-project/twa-manifest.json" ]; then
-            echo "Menjana twa-manifest.json secara automatik..."
-            node -e '
-              (async () => {
-                let m = {};
-                try {
-                  const res = await fetch("https://kimsoju81.github.io/Pejabat/manifest.json");
-                  const rawText = await res.text();
-                  const cleaned = rawText.replace(/,\s*([\]}])/g, "$1");
-                  m = JSON.parse(cleaned);
-                } catch (err) {
-                  console.warn("Amaran: manifest.json tidak sah, guna tetapan lalai:", err.message);
+          # Jana twa-manifest.json secara terus (dengan pembersihan koma berlebihan jika ada)
+          node -e '
+            (async () => {
+              let m = {};
+              try {
+                const res = await fetch("https://kimsoju81.github.io/Pejabat/manifest.json");
+                const rawText = await res.text();
+                const cleaned = rawText.replace(/,\s*([\]}])/g, "$1");
+                m = JSON.parse(cleaned);
+              } catch (err) {
+                console.warn("Amaran: manifest.json tidak sah, guna tetapan lalai:", err.message);
+              }
+
+              const baseUrl = "https://kimsoju81.github.io/Pejabat/";
+              let startPath = "/";
+              try {
+                startPath = new URL(m.start_url || "/", baseUrl).pathname;
+              } catch (_) {
+                startPath = "/";
+              }
+
+              let iconUrl = baseUrl + "icon-512.png";
+              try {
+                if (Array.isArray(m.icons) && m.icons.length > 0 && m.icons[0]?.src) {
+                  iconUrl = new URL(m.icons[0].src, baseUrl).toString();
                 }
+              } catch (_) {
+                iconUrl = baseUrl + "icon-512.png";
+              }
 
-                const baseUrl = "https://kimsoju81.github.io/Pejabat/";
-                let startPath = "/";
-                try {
-                  startPath = new URL(m.start_url || "/", baseUrl).pathname;
-                } catch (_) {
-                  startPath = "/";
-                }
+              const twa = {
+                packageId: "org.pejabat.app",
+                host: "kimsoju81.github.io",
+                name: typeof m.name === "string" && m.name.trim() ? m.name.trim() : "Pejabat",
+                launcherName: typeof m.short_name === "string" && m.short_name.trim() ? m.short_name.trim() : "Pejabat",
+                display: typeof m.display === "string" ? m.display : "standalone",
+                themeColor: typeof m.theme_color === "string" ? m.theme_color : "#001F3F",
+                themeColorDark: "#001F3F",
+                navigationColor: "#000000",
+                navigationColorDark: "#000000",
+                navigationDividerColor: "#000000",
+                navigationDividerColorDark: "#000000",
+                backgroundColor: typeof m.background_color === "string" ? m.background_color : "#FFFFFF",
+                enableNotifications: true,
+                startUrl: startPath,
+                iconUrl: iconUrl,
+                maskableIconUrl: iconUrl,
+                splashScreenFadeOutDuration: 300,
+                signingKey: {
+                  path: process.env.GITHUB_WORKSPACE + "/android.keystore",
+                  alias: "pejabatkey"
+                },
+                appVersionName: "1.0.0",
+                appVersionCode: 1,
+                shortcuts: [],
+                generatorApp: "bubblewrap-cli",
+                webManifestUrl: "https://kimsoju81.github.io/Pejabat/manifest.json",
+                fallbackType: "customtabs",
+                features: {},
+                alphaDependencies: { enabled: false },
+                enableSiteSettingsShortcut: true,
+                isChromeOSOnly: false,
+                isMetaQuest: false,
+                minSdkVersion: 21,
+                orientation: typeof m.orientation === "string" ? m.orientation : "default",
+                fingerprints: [],
+                additionalTrustedOrigins: [],
+                retainedHashes: [],
+                protocolHandlers: [],
+                fileHandlers: [],
+                launchHandlerClientMode: "",
+                displayOverride: [],
+                appVersion: "1.0.0"
+              };
 
-                let iconUrl = baseUrl + "icon-512.png";
-                try {
-                  if (Array.isArray(m.icons) && m.icons.length > 0 && m.icons[0]?.src) {
-                    iconUrl = new URL(m.icons[0].src, baseUrl).toString();
-                  }
-                } catch (_) {
-                  iconUrl = baseUrl + "icon-512.png";
-                }
+              require("fs").writeFileSync("twa-manifest.json", JSON.stringify(twa, null, 2));
+            })();
+          '
 
-                const twa = {
-                  packageId: "org.pejabat.app",
-                  host: "kimsoju81.github.io",
-                  name: typeof m.name === "string" && m.name.trim() ? m.name.trim() : "Pejabat",
-                  launcherName: typeof m.short_name === "string" && m.short_name.trim() ? m.short_name.trim() : "Pejabat",
-                  display: typeof m.display === "string" ? m.display : "standalone",
-                  themeColor: typeof m.theme_color === "string" ? m.theme_color : "#001F3F",
-                  themeColorDark: "#001F3F",
-                  navigationColor: "#000000",
-                  navigationColorDark: "#000000",
-                  navigationDividerColor: "#000000",
-                  navigationDividerColorDark: "#000000",
-                  backgroundColor: typeof m.background_color === "string" ? m.background_color : "#FFFFFF",
-                  enableNotifications: true,
-                  startUrl: startPath,
-                  iconUrl: iconUrl,
-                  maskableIconUrl: iconUrl,
-                  splashScreenFadeOutDuration: 300,
-                  signingKey: {
-                    path: process.env.GITHUB_WORKSPACE + "/android.keystore",
-                    alias: "pejabatkey"
-                  },
-                  appVersionName: "1.0.0",
-                  appVersionCode: 1,
-                  shortcuts: [],
-                  generatorApp: "bubblewrap-cli",
-                  webManifestUrl: "https://kimsoju81.github.io/Pejabat/manifest.json",
-                  fallbackType: "customtabs",
-                  features: {},
-                  alphaDependencies: { enabled: false },
-                  enableSiteSettingsShortcut: true,
-                  isChromeOSOnly: false,
-                  isMetaQuest: false,
-                  minSdkVersion: 21,
-                  orientation: typeof m.orientation === "string" ? m.orientation : "default",
-                  fingerprints: [],
-                  additionalTrustedOrigins: [],
-                  retainedHashes: [],
-                  protocolHandlers: [],
-                  fileHandlers: [],
-                  launchHandlerClientMode: "",
-                  displayOverride: [],
-                  appVersion: "1.0.0"
-                };
-
-                require("fs").writeFileSync("twa-manifest.json", JSON.stringify(twa, null, 2));
-              })();
-            '
-            bubblewrap update --skipPwaValidation || true
-          fi
-
+          bubblewrap update --skipPwaValidation || true
           bubblewrap build --skipPwaValidation
 
       - name: Muat Naik Fail APK sebagai Artifact
