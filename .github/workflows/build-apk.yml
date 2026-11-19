@@ -61,6 +61,7 @@ jobs:
             -dname "CN=Pejabat, OU=Development, O=Pejabat, L=Melaka, ST=Melaka, C=MY"
 
       - name: Cipta konfigurasi Bubblewrap & Bina APK
+              - name: Cipta konfigurasi Bubblewrap & Bina APK
         run: |
           mkdir -p "$GITHUB_WORKSPACE/twa-project"
           cd "$GITHUB_WORKSPACE/twa-project"
@@ -70,21 +71,77 @@ jobs:
             export JAVA_HOME
           fi
 
+          # Cuba init dengan input terhad (maksimum 30 baris 'n' sahaja, bukan 'yes' tanpa had)
           {
             printf 'n\n%s\nn\n%s\n' "$JAVA_HOME" "$ANDROID_HOME"
-            yes "n"
-          } | timeout 45s bubblewrap init \
+            printf 'n\n%.0s' {1..25}
+          } | bubblewrap init \
             --manifest="https://kimsoju81.github.io/Pejabat/manifest.json" \
             --directory="." || true
 
+          # Jika twa-manifest.json belum wujud, jana secara terus daripada manifest.json
           if [ ! -f "$GITHUB_WORKSPACE/twa-project/twa-manifest.json" ]; then
-            echo "twa-manifest.json belum dijana, cuba semula init..."
-            yes "" | timeout 45s bubblewrap init \
-              --manifest="https://kimsoju81.github.io/Pejabat/manifest.json" \
-              --directory="." || true
+            echo "Menjana twa-manifest.json secara automatik..."
+            node -e '
+              (async () => {
+                const res = await fetch("https://kimsoju81.github.io/Pejabat/manifest.json");
+                const m = await res.json();
+                const startUrl = new URL(m.start_url || "/", "https://kimsoju81.github.io/Pejabat/").toString();
+                const iconUrl = (m.icons && m.icons[0] && m.icons[0].src)
+                  ? new URL(m.icons[0].src, "https://kimsoju81.github.io/Pejabat/").toString()
+                  : "https://kimsoju81.github.io/Pejabat/icon-512.png";
+                const twa = {
+                  packageId: "org.pejabat.app",
+                  host: "kimsoju81.github.io",
+                  name: m.name || "Pejabat",
+                  launcherName: m.short_name || "Pejabat",
+                  display: m.display || "standalone",
+                  themeColor: m.theme_color || "#001F3F",
+                  themeColorDark: "#001F3F",
+                  navigationColor: "#000000",
+                  navigationColorDark: "#000000",
+                  navigationDividerColor: "#000000",
+                  navigationDividerColorDark: "#000000",
+                  backgroundColor: m.background_color || "#FFFFFF",
+                  enableNotifications: true,
+                  startUrl: new URL(m.start_url || "/", "https://kimsoju81.github.io/Pejabat/").pathname,
+                  iconUrl: iconUrl,
+                  maskableIconUrl: iconUrl,
+                  splashScreenFadeOutDuration: 300,
+                  signingKey: {
+                    path: process.env.GITHUB_WORKSPACE + "/android.keystore",
+                    alias: "pejabatkey"
+                  },
+                  appVersionName: "1.0.0",
+                  appVersionCode: 1,
+                  shortcuts: [],
+                  generatorApp: "bubblewrap-cli",
+                  webManifestUrl: "https://kimsoju81.github.io/Pejabat/manifest.json",
+                  fallbackType: "customtabs",
+                  features: {},
+                  alphaDependencies: { enabled: false },
+                  enableSiteSettingsShortcut: true,
+                  isChromeOSOnly: false,
+                  isMetaQuest: false,
+                  minSdkVersion: 21,
+                  orientation: m.orientation || "default",
+                  fingerprints: [],
+                  additionalTrustedOrigins: [],
+                  retainedHashes: [],
+                  protocolHandlers: [],
+                  fileHandlers: [],
+                  launchHandlerClientMode: "",
+                  displayOverride: [],
+                  appVersion: "1.0.0"
+                };
+                require("fs").writeFileSync("twa-manifest.json", JSON.stringify(twa, null, 2));
+              })();
+            '
+            bubblewrap update --skipPwaValidation || true
           fi
 
           bubblewrap build --skipPwaValidation
+
 
       - name: Muat Naik Fail APK sebagai Artifact
         uses: actions/upload-artifact@v5
