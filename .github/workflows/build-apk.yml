@@ -61,7 +61,6 @@ jobs:
             -dname "CN=Pejabat, OU=Development, O=Pejabat, L=Melaka, ST=Melaka, C=MY"
 
       - name: Cipta konfigurasi Bubblewrap & Bina APK
-              - name: Cipta konfigurasi Bubblewrap & Bina APK
         run: |
           mkdir -p "$GITHUB_WORKSPACE/twa-project"
           cd "$GITHUB_WORKSPACE/twa-project"
