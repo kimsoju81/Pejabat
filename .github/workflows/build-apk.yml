@@ -1,4 +1,5 @@
-- name: Cipta konfigurasi Bubblewrap & Bina APK run: |
+      - name: Cipta konfigurasi Bubblewrap & Bina APK
+        run: |
           mkdir -p "$GITHUB_WORKSPACE/twa-project"
           cd "$GITHUB_WORKSPACE/twa-project"
 
