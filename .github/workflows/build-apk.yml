@@ -46,7 +46,7 @@ jobs:
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
 
             - name: Cipta konfigurasi Bubblewrap & Bina APK
-        run: |
+        
           mkdir -p "$GITHUB_WORKSPACE/twa-project"
           cd "$GITHUB_WORKSPACE/twa-project"
 
