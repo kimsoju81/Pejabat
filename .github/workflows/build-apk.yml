@@ -65,15 +65,21 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/twa-project" "$HOME/.bubblewrap"
           cd "$GITHUB_WORKSPACE/twa-project"
 
+          export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$HOME/android-sdk}"
+          export ANDROID_HOME="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+
           if [ -z "${JAVA_HOME:-}" ]; then
             JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")"
             export JAVA_HOME
           fi
 
+          ls -la "$ANDROID_HOME/cmdline-tools/latest/bin" "$ANDROID_HOME/platforms" "$ANDROID_HOME/build-tools"
+
           cat <<EOF > "$HOME/.bubblewrap/config.json"
           {
             "jdkPath": "$JAVA_HOME",
-            "androidSdkPath": "$ANDROID_HOME"
+            "androidSdkPath": "$ANDROID_HOME",
+            "sdkPath": "$ANDROID_HOME"
           }
           EOF
 
@@ -155,7 +161,6 @@ jobs:
             })();
           '
 
-          bubblewrap update --skipPwaValidation || true
           bubblewrap build --skipPwaValidation
 
       - name: Muat Naik Fail APK sebagai Artifact
