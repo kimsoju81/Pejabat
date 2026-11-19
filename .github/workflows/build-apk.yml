@@ -60,7 +60,7 @@ jobs:
             -keypass pejabat123 \
             -dname "CN=Pejabat, OU=Development, O=Pejabat, L=Melaka, ST=Melaka, C=MY"
 
-      - name: Cipta konfigurasi Bubblewrap & Bina APK
+            - name: Cipta konfigurasi Bubblewrap & Bina APK
         run: |
           mkdir -p "$GITHUB_WORKSPACE/twa-project"
           cd "$GITHUB_WORKSPACE/twa-project"
@@ -70,7 +70,6 @@ jobs:
             export JAVA_HOME
           fi
 
-          # Cuba init dengan input terhad (maksimum 30 baris 'n' sahaja, bukan 'yes' tanpa had)
           {
             printf 'n\n%s\nn\n%s\n' "$JAVA_HOME" "$ANDROID_HOME"
             printf 'n\n%.0s' {1..25}
@@ -78,32 +77,52 @@ jobs:
             --manifest="https://kimsoju81.github.io/Pejabat/manifest.json" \
             --directory="." || true
 
-          # Jika twa-manifest.json belum wujud, jana secara terus daripada manifest.json
           if [ ! -f "$GITHUB_WORKSPACE/twa-project/twa-manifest.json" ]; then
             echo "Menjana twa-manifest.json secara automatik..."
             node -e '
               (async () => {
-                const res = await fetch("https://kimsoju81.github.io/Pejabat/manifest.json");
-                const m = await res.json();
-                const startUrl = new URL(m.start_url || "/", "https://kimsoju81.github.io/Pejabat/").toString();
-                const iconUrl = (m.icons && m.icons[0] && m.icons[0].src)
-                  ? new URL(m.icons[0].src, "https://kimsoju81.github.io/Pejabat/").toString()
-                  : "https://kimsoju81.github.io/Pejabat/icon-512.png";
+                let m = {};
+                try {
+                  const res = await fetch("https://kimsoju81.github.io/Pejabat/manifest.json");
+                  const rawText = await res.text();
+                  const cleaned = rawText.replace(/,\s*([\]}])/g, "$1");
+                  m = JSON.parse(cleaned);
+                } catch (err) {
+                  console.warn("Amaran: manifest.json tidak sah, guna tetapan lalai:", err.message);
+                }
+
+                const baseUrl = "https://kimsoju81.github.io/Pejabat/";
+                let startPath = "/";
+                try {
+                  startPath = new URL(m.start_url || "/", baseUrl).pathname;
+                } catch (_) {
+                  startPath = "/";
+                }
+
+                let iconUrl = baseUrl + "icon-512.png";
+                try {
+                  if (Array.isArray(m.icons) && m.icons.length > 0 && m.icons[0]?.src) {
+                    iconUrl = new URL(m.icons[0].src, baseUrl).toString();
+                  }
+                } catch (_) {
+                  iconUrl = baseUrl + "icon-512.png";
+                }
+
                 const twa = {
                   packageId: "org.pejabat.app",
                   host: "kimsoju81.github.io",
-                  name: m.name || "Pejabat",
-                  launcherName: m.short_name || "Pejabat",
-                  display: m.display || "standalone",
-                  themeColor: m.theme_color || "#001F3F",
+                  name: typeof m.name === "string" && m.name.trim() ? m.name.trim() : "Pejabat",
+                  launcherName: typeof m.short_name === "string" && m.short_name.trim() ? m.short_name.trim() : "Pejabat",
+                  display: typeof m.display === "string" ? m.display : "standalone",
+                  themeColor: typeof m.theme_color === "string" ? m.theme_color : "#001F3F",
                   themeColorDark: "#001F3F",
                   navigationColor: "#000000",
                   navigationColorDark: "#000000",
                   navigationDividerColor: "#000000",
                   navigationDividerColorDark: "#000000",
-                  backgroundColor: m.background_color || "#FFFFFF",
+                  backgroundColor: typeof m.background_color === "string" ? m.background_color : "#FFFFFF",
                   enableNotifications: true,
-                  startUrl: new URL(m.start_url || "/", "https://kimsoju81.github.io/Pejabat/").pathname,
+                  startUrl: startPath,
                   iconUrl: iconUrl,
                   maskableIconUrl: iconUrl,
                   splashScreenFadeOutDuration: 300,
@@ -123,7 +142,7 @@ jobs:
                   isChromeOSOnly: false,
                   isMetaQuest: false,
                   minSdkVersion: 21,
-                  orientation: m.orientation || "default",
+                  orientation: typeof m.orientation === "string" ? m.orientation : "default",
                   fingerprints: [],
                   additionalTrustedOrigins: [],
                   retainedHashes: [],
@@ -133,6 +152,7 @@ jobs:
                   displayOverride: [],
                   appVersion: "1.0.0"
                 };
+
                 require("fs").writeFileSync("twa-manifest.json", JSON.stringify(twa, null, 2));
               })();
             '
