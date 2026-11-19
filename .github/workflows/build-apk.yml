@@ -63,7 +63,7 @@ jobs:
         run: |
           mkdir -p "$GITHUB_WORKSPACE/twa-project"
           cd "$GITHUB_WORKSPACE/twa-project"
-          printf '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n' | bubblewrap init \
+          yes "n" | bubblewrap init \
             --manifest="https://kimsoju81.github.io/Pejabat/manifest.json" \
             --directory="." \
             --jdkPath="$JAVA_HOME" \
@@ -75,7 +75,8 @@ jobs:
           bubblewrap build --skipPwaValidation
 
       - name: Muat Naik Fail APK sebagai Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Pejabat-Android-APK
           path: twa-project/**/*.apk
+          
