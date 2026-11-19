@@ -60,8 +60,8 @@ jobs:
             -keypass pejabat123 \
             -dname "CN=Pejabat, OU=Development, O=Pejabat, L=Melaka, ST=Melaka, C=MY"
 
-            - name: Cipta konfigurasi Bubblewrap & Bina APK
-        
+      - name: Cipta konfigurasi Bubblewrap & Bina APK
+        run: |
           mkdir -p "$GITHUB_WORKSPACE/twa-project" "$HOME/.bubblewrap"
           cd "$GITHUB_WORKSPACE/twa-project"
 
@@ -70,7 +70,6 @@ jobs:
             export JAVA_HOME
           fi
 
-          # Tetapkan konfigurasi laluan JDK & SDK untuk Bubblewrap supaya tidak bertanya secara interaktif
           cat <<EOF > "$HOME/.bubblewrap/config.json"
           {
             "jdkPath": "$JAVA_HOME",
@@ -78,7 +77,6 @@ jobs:
           }
           EOF
 
-          # Jana twa-manifest.json secara terus (dengan pembersihan koma berlebihan jika ada)
           node -e '
             (async () => {
               let m = {};
