@@ -9,6 +9,7 @@ on:
 jobs:
   build-apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repositori
@@ -63,7 +64,7 @@ jobs:
         run: |
           mkdir -p "$GITHUB_WORKSPACE/twa-project"
           cd "$GITHUB_WORKSPACE/twa-project"
-          yes "n" | bubblewrap init \
+          printf 'n\nn\nn\nn\nn\nn\nn\nn\n' | bubblewrap init \
             --manifest="https://kimsoju81.github.io/Pejabat/manifest.json" \
             --directory="." \
             --jdkPath="$JAVA_HOME" \
