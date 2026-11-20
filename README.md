@@ -4,7 +4,7 @@ Sut produktiviti serba lengkap yang menampilkan penyuntingan dokumen bergaya ret
 
 ---
 
-## 2. Pemasangan dan Cara Menjalankan Aplikasi
+## 2. Boleh dilayari di https://pejabat.org. Pemasangan dan Cara Menjalankan Aplikasi memerlukan sedikit kemahiran.
 
 ```bash
 # 1. Pasang semua kebergantungan
