@@ -42,8 +42,8 @@ jobs:
 
           chmod -R +x "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin"
 
-          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" --licenses < /dev/null >/dev/null 2>&1 || true
-          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" \
+          (printf 'y\n%.0s' {1..50}) | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" --licenses >/dev/null 2>&1 || true
+          (printf 'y\n%.0s' {1..50}) | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" \
             "platform-tools" \
             "platforms;android-34" \
             "build-tools;34.0.0"
@@ -81,7 +81,15 @@ jobs:
             export JAVA_HOME
           fi
 
-          ls -la "$ANDROID_HOME/build-tools" || true
+          if [ ! -d "$ANDROID_HOME/build-tools/34.0.0" ]; then
+            (printf 'y\n%.0s' {1..50}) | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --licenses >/dev/null 2>&1 || true
+            (printf 'y\n%.0s' {1..50}) | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" \
+              "platform-tools" \
+              "platforms;android-34" \
+              "build-tools;34.0.0"
+          fi
+
+          ls -la "$ANDROID_HOME/build-tools"
 
           cat <<EOF > "$HOME/.bubblewrap/config.json"
           {
