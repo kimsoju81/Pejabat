@@ -174,7 +174,42 @@ jobs:
             echo "Bubblewrap build berjaya."
           else
             echo "Bubblewrap build gagal pada semakan SDK, mencipta projek Android & membina APK melalui Gradle 8.4..."
-            mkdir -p app/src/main/java/org/pejabat/app app/src/main/res/values
+            mkdir -p \
+              app/src/main/java/org/pejabat/app \
+              app/src/main/res/values \
+              app/src/main/res/mipmap-mdpi \
+              app/src/main/res/mipmap-hdpi \
+              app/src/main/res/mipmap-xhdpi \
+              app/src/main/res/mipmap-xxhdpi \
+              app/src/main/res/mipmap-xxxhdpi
+
+            # Muat turun ikon aplikasi jika tersedia, atau guna ImageMagick/Python untuk jana ikon sandaran
+            curl -fsSL "https://pejabat.ai.studio/icon-512.png" -o icon_source.png || true
+            if [ ! -s icon_source.png ]; then
+              python3 -c '
+                from PIL import Image, ImageDraw, ImageFont
+                img = Image.new("RGBA", (512, 512), (0, 31, 63, 255))
+                d = ImageDraw.Draw(img)
+                d.text((145, 215), "P", fill=(255, 255, 255, 255))
+                img.save("icon_source.png")
+              ' 2>/dev/null || true
+            fi
+
+            if [ -s icon_source.png ] && command -v convert >/dev/null 2>&1; then
+              convert icon_source.png -resize 48x48 app/src/main/res/mipmap-mdpi/ic_launcher.png
+              convert icon_source.png -resize 72x72 app/src/main/res/mipmap-hdpi/ic_launcher.png
+              convert icon_source.png -resize 96x96 app/src/main/res/mipmap-xhdpi/ic_launcher.png
+              convert icon_source.png -resize 144x144 app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+              convert icon_source.png -resize 192x192 app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+              cp app/src/main/res/mipmap-mdpi/ic_launcher.png app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+              cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+              cp app/src/main/res/mipmap-xhdpi/ic_launcher.png app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+              cp app/src/main/res/mipmap-xxhdpi/ic_launcher.png app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+              cp app/src/main/res/mipmap-xxxhdpi/ic_launcher.png app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+              ICON_ATTRS="android:icon=\"@mipmap/ic_launcher\" android:roundIcon=\"@mipmap/ic_launcher_round\""
+            else
+              ICON_ATTRS=""
+            fi
 
             printf "sdk.dir=%s\n" "$ANDROID_HOME" > local.properties
             printf "rootProject.name = 'PejabatTWA'\ninclude ':app'\n" > settings.gradle
@@ -185,22 +220,6 @@ jobs:
 
             printf "<resources>\n    <string name=\"app_name\">Pejabat</string>\n</resources>\n" > app/src/main/res/values/strings.xml
 
-            printf "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">\n    <uses-permission android:name=\"android.permission.INTERNET\" />\n    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />\n    <application\n        android:allowBackup=\"true\"\n        android:label=\"@string/app_name\"\n        android:supportsRtl=\"true\"\n        android:usesCleartextTraffic=\"true\"\n        android:theme=\"@android:style/Theme.DeviceDefault.Light.NoActionBar\">\n        <activity\n            android:name=\".MainActivity\"\n            android:exported=\"true\"\n            android:configChanges=\"orientation|screenSize|keyboardHidden\">\n            <intent-filter>\n                <action android:name=\"android.intent.action.MAIN\" />\n                <category android:name=\"android.intent.category.LAUNCHER\" />\n            </intent-filter>\n        </activity>\n    </application>\n</manifest>\n" > app/src/main/AndroidManifest.xml
+            printf "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">\n    <uses-permission android:name=\"android.permission.INTERNET\" />\n    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />\n    <application\n        android:allowBackup=\"true\"\n        %s\n        android:label=\"@string/app_name\"\n        android:supportsRtl=\"true\"\n        android:usesCleartextTraffic=\"true\"\n        android:theme=\"@android:style/Theme.DeviceDefault.Light.NoActionBar\">\n        <activity\n            android:name=\".MainActivity\"\n            android:exported=\"true\"\n            android:configChanges=\"orientation|screenSize|keyboardHidden\">\n            <intent-filter>\n                <action android:name=\"android.intent.action.MAIN\" />\n                <category android:name=\"android.intent.category.LAUNCHER\" />\n            </intent-filter>\n        </activity>\n    </application>\n</manifest>\n" "$ICON_ATTRS" > app/src/main/AndroidManifest.xml
 
-            printf "package org.pejabat.app;\n\nimport android.app.Activity;\nimport android.graphics.Color;\nimport android.os.Bundle;\nimport android.os.Handler;\nimport android.os.Looper;\nimport android.webkit.WebChromeClient;\nimport android.webkit.WebResourceError;\nimport android.webkit.WebResourceRequest;\nimport android.webkit.WebSettings;\nimport android.webkit.WebView;\nimport android.webkit.WebViewClient;\n\npublic class MainActivity extends Activity {\n    private boolean pageLoaded = false;\n\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        final WebView webView = new WebView(this);\n        webView.setBackgroundColor(Color.WHITE);\n        WebSettings settings = webView.getSettings();\n        settings.setJavaScriptEnabled(true);\n        settings.setDomStorageEnabled(true);\n        settings.setDatabaseEnabled(true);\n        settings.setLoadWithOverviewMode(true);\n        settings.setUseWideViewPort(true);\n        settings.setCacheMode(WebSettings.LOAD_DEFAULT);\n        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);\n        webView.setWebChromeClient(new WebChromeClient());\n        webView.setWebViewClient(new WebViewClient() {\n            @Override\n            public void onPageFinished(WebView view, String url) {\n                super.onPageFinished(view, url);\n                pageLoaded = true;\n            }\n            @Override\n            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {\n                view.loadUrl(request.getUrl().toString());\n                return true;\n            }\n            @Override\n            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {\n                if (request.isForMainFrame()) {\n                    pageLoaded = true;\n                    String html = \"<html><body style='font-family:Arial,sans-serif;padding:24px;color:#000;background:#fff;'>\" +\n                        \"<h3 style='color:#001F3F;'>Pejabat</h3>\" +\n                        \"<p>Ralat memuatkan: \" + error.getDescription() + \"</p>\" +\n                        \"<p>URL: https://pejabat.ai.studio/</p>\" +\n                        \"</body></html>\";\n                    view.loadDataWithBaseURL(null, html, \"text/html\", \"UTF-8\", null);\n                }\n            }\n        });\n        setContentView(webView);\n        webView.loadUrl(\"https://pejabat.ai.studio/\");\n\n        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {\n            @Override\n            public void run() {\n                if (!pageLoaded) {\n                    String html = \"<html><body style='font-family:Arial,sans-serif;padding:24px;color:#000;background:#fff;'>\" +\n                        \"<h3 style='color:#001F3F;'>Pejabat</h3>\" +\n                        \"<p>Sedang menyambung ke https://pejabat.ai.studio/...</p>\" +\n                        \"<p>Jika skrin kekal di sini, periksa sambungan internet atau status laman web.</p>\" +\n                        \"</body></html>\";\n                    webView.loadDataWithBaseURL(\"https://pejabat.ai.studio/\", html, \"text/html\", \"UTF-8\", null);\n                }\n            }\n        }, 6000);\n    }\n}\n" > app/src/main/java/org/pejabat/app/MainActivity.java
-
-            rm -rf /opt/gradle/gradle-8.4 gradle.zip
-            mkdir -p /opt/gradle
-            curl -fsSL https://services.gradle.org/distributions/gradle-8.4-bin.zip -o gradle.zip
-            unzip -q gradle.zip -d /opt/gradle
-            rm -f gradle.zip
-            chmod +x /opt/gradle/gradle-8.4/bin/gradle
-
-            /opt/gradle/gradle-8.4/bin/gradle assembleRelease --no-daemon --stacktrace
-          fi
-
-      - name: Muat Naik Fail APK sebagai Artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: Pejabat-Android-APK
-          path: twa-project/**/*.apk
+            printf "package org.pejabat.app;\n\nimport android.app.Activity;\nimport android.graphics.Color;\nimport android.os.Bundle;\nimport android.os.Handler;\nimport android.os.Looper;\nimport android.webkit.WebChromeClient;\nimport android.webkit.WebResourceError;\nimport android.webkit.WebResourceRequest;\nimport android.webkit.WebSettings;\nimport android.webkit.WebView;\nimport android.webkit.WebViewClient;\n\npublic class MainActivity extends Activity {\n    private boolean pageLoaded = false;\n\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        final WebView webView = new WebView(this);\n        webView.setBackgroundColor(Color.WHITE);\n        WebSettings settings = webView.getSettings();\n        settings.setJavaScriptEnabled(true);\n        settings.setDomStorageEnabled(true);\n        settings.setDatabaseEnabled(true);\n        settings.setLoadWithOverviewMode(true);\n        settings.setUseWideViewPort(true);\n        settings.setCacheMode(WebSettings.LOAD_DEFAULT);\n        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);\n        webView.setWebChromeClient(new WebChromeClient());\n        webView.setWebViewClient(new WebViewClient() {\n            @Override\n            public void onPageFinished(WebView view, String url) {\n                super.onPageFinished(view, url);\n                pageLoaded = true;\n            }\n            @Override\n            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {\n                view.loadUrl(request.getUrl().toString());\n                return true;\n            }\n            @Override\n            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {\n                if (request.isForMainFrame()) {\n                    pageLoaded = true;\n                    String html = \"<html><body style='font-family:Arial,sans-serif;padding:24px;color:#000;background:#fff;'>\" +\n                        \"<h3 style='color:#001F3F;'>Pejabat</h3>\" +\n                        \"<p>Ralat memuatkan: \" + error.getDescription() + \"</p>\" +\n                        \"<p>URL: https://pejabat.ai.studio/</p>\" +\n                        \"</body></html>\";\n                    view.loadDataWithBaseURL(null, html, \"text/html\", \"UTF-8\", null);\n                }\n            }\n        });\n        setContentView(webView);\n        webView.loadUrl(\"https://pejabat.ai.studio/\");\n\n        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {\n            @Override\n            public void run() {\n                if (!pageLoaded) {\n                    String html = \"<html><body style='font-family:Arial,sans-serif;padding:24px;color:#000;background:#fff;'>\" +\n                        \"<h3 style='color:#001F3F;'>Pejabat
