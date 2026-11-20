@@ -62,18 +62,24 @@ jobs:
 
       - name: Cipta konfigurasi Bubblewrap & Bina APK
         run: |
+          set -e
           mkdir -p "$GITHUB_WORKSPACE/twa-project" "$HOME/.bubblewrap"
           cd "$GITHUB_WORKSPACE/twa-project"
 
-          export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$HOME/android-sdk}"
-          export ANDROID_HOME="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          export ANDROID_SDK_ROOT="$HOME/android-sdk"
+          export ANDROID_HOME="$HOME/android-sdk"
 
           if [ -z "${JAVA_HOME:-}" ]; then
             JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")"
             export JAVA_HOME
           fi
 
-          ls -la "$ANDROID_HOME/cmdline-tools/latest/bin" "$ANDROID_HOME/platforms" "$ANDROID_HOME/build-tools"
+          # Pastikan folder licenses wujud dan semua lesen diterima
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
+
+          echo "JAVA_HOME=$JAVA_HOME"
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls -la "$ANDROID_HOME"
 
           cat <<EOF > "$HOME/.bubblewrap/config.json"
           {
@@ -161,7 +167,10 @@ jobs:
             })();
           '
 
-          bubblewrap build --skipPwaValidation
+          bubblewrap build \
+            --skipPwaValidation \
+            --jdkPath="$JAVA_HOME" \
+            --androidSdkPath="$ANDROID_HOME"
 
       - name: Muat Naik Fail APK sebagai Artifact
         uses: actions/upload-artifact@v5
