@@ -42,7 +42,7 @@ jobs:
 
           chmod -R +x "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin"
 
-          (while true; do echo y; done) | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" --licenses >/dev/null || true
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" --licenses >/dev/null || true
           "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" \
             "platform-tools" \
             "platforms;android-34" \
@@ -81,9 +81,7 @@ jobs:
             export JAVA_HOME
           fi
 
-          echo "Memeriksa struktur SDK di $ANDROID_HOME..."
-          ls -la "$ANDROID_HOME"
-          ls -la "$ANDROID_HOME/cmdline-tools/latest/bin"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
 
           cat <<EOF > "$HOME/.bubblewrap/config.json"
           {
