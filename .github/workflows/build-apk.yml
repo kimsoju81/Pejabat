@@ -81,16 +81,6 @@ jobs:
             export JAVA_HOME
           fi
 
-          if [ ! -d "$ANDROID_HOME/build-tools/34.0.0" ]; then
-            (printf 'y\n%.0s' {1..50}) | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --licenses >/dev/null 2>&1 || true
-            (printf 'y\n%.0s' {1..50}) | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" \
-              "platform-tools" \
-              "platforms;android-34" \
-              "build-tools;34.0.0"
-          fi
-
-          ls -la "$ANDROID_HOME/build-tools"
-
           cat <<EOF > "$HOME/.bubblewrap/config.json"
           {
             "jdkPath": "$JAVA_HOME",
@@ -177,10 +167,23 @@ jobs:
             })();
           '
 
-          bubblewrap build \
+          # Cuba bubblewrap build; jika gagal kerana validator androidSdk, terus bina melalui Gradle jika gradlew wujud
+          if ! bubblewrap build \
             --skipPwaValidation \
             --jdkPath="$JAVA_HOME" \
-            --androidSdkPath="$ANDROID_HOME"
+            --androidSdkPath="$ANDROID_HOME"; then
+            echo "Bubblewrap build terhenti pada semakan SDK, menyemak projek Gradle..."
+            if [ -f "./gradlew" ]; then
+              chmod +x ./gradlew
+              ./gradlew assembleRelease \
+                -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/android.keystore" \
+                -Pandroid.injected.signing.store.password="pejabat123" \
+                -Pandroid.injected.signing.key.alias="pejabatkey" \
+                -Pandroid.injected.signing.key.password="pejabat123"
+            else
+              exit 1
+            fi
+          fi
 
       - name: Muat Naik Fail APK sebagai Artifact
         uses: actions/upload-artifact@v5
