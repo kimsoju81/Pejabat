@@ -73,18 +73,16 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/twa-project" "$HOME/.bubblewrap"
           cd "$GITHUB_WORKSPACE/twa-project"
 
-          export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$HOME/android-sdk}"
-          export ANDROID_HOME="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          export ANDROID_SDK_ROOT="$HOME/android-sdk"
+          export ANDROID_HOME="$HOME/android-sdk"
 
           if [ -z "${JAVA_HOME:-}" ]; then
             JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")"
             export JAVA_HOME
           fi
 
-          # Pastikan sdkmanager wujud dan lesen diterima
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
 
-          # Tulis konfigurasi Bubblewrap
           cat <<EOF > "$HOME/.bubblewrap/config.json"
           {
             "jdkPath": "$JAVA_HOME",
@@ -171,10 +169,6 @@ jobs:
             })();
           '
 
-          # Cuba updateConfig dengan input yang disediakan supaya tidak bertanya interaktif
-          printf "n\n%s\nn\n%s\n" "$JAVA_HOME" "$ANDROID_HOME" | timeout 20s bubblewrap updateConfig || true
-
-          # Bina APK menggunakan Gradle / Bubblewrap
           bubblewrap build \
             --skipPwaValidation \
             --jdkPath="$JAVA_HOME" \
