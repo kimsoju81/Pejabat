@@ -167,22 +167,149 @@ jobs:
             })();
           '
 
-          # Cuba bubblewrap build; jika gagal kerana validator androidSdk, terus bina melalui Gradle jika gradlew wujud
-          if ! bubblewrap build \
+          # Cuba bubblewrap build terlebih dahulu
+          if bubblewrap build \
             --skipPwaValidation \
             --jdkPath="$JAVA_HOME" \
             --androidSdkPath="$ANDROID_HOME"; then
-            echo "Bubblewrap build terhenti pada semakan SDK, menyemak projek Gradle..."
-            if [ -f "./gradlew" ]; then
-              chmod +x ./gradlew
-              ./gradlew assembleRelease \
-                -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/android.keystore" \
-                -Pandroid.injected.signing.store.password="pejabat123" \
-                -Pandroid.injected.signing.key.alias="pejabatkey" \
-                -Pandroid.injected.signing.key.password="pejabat123"
-            else
-              exit 1
+            echo "Bubblewrap build berjaya."
+          else
+            echo "Bubblewrap build gagal pada semakan SDK, mencipta projek Android TWA & membina APK melalui Gradle..."
+            mkdir -p app/src/main/java/org/pejabat/app app/src/main/res/values
+
+            cat <<EOF > local.properties
+sdk.dir=$ANDROID_HOME
+EOF
+
+            cat <<EOF > settings.gradle
+rootProject.name = 'PejabatTWA'
+include ':app'
+EOF
+
+            cat <<EOF > build.gradle
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.2'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+EOF
+
+            cat <<EOF > app/build.gradle
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'org.pejabat.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "org.pejabat.app"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file("$GITHUB_WORKSPACE/android.keystore")
+            storePassword "pejabat123"
+            keyAlias "pejabatkey"
+            keyPassword "pejabat123"
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.browser:browser:1.7.0'
+}
+EOF
+
+            cat <<EOF > app/src/main/res/values/strings.xml
+<resources>
+    <string name="app_name">Pejabat</string>
+</resources>
+EOF
+
+            cat <<EOF > app/src/main/AndroidManifest.xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application
+        android:allowBackup="true"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+EOF
+
+            cat <<EOF > app/src/main/java/org/pejabat/app/MainActivity.java
+package org.pejabat.app;
+
+import android.net.Uri;
+import android.os.Bundle;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        WebView webView = new WebView(this);
+        WebSettings settings = webView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        webView.setWebViewClient(new WebViewClient());
+        setContentView(webView);
+        webView.loadUrl("https://kimsoju81.github.io/Pejabat/");
+    }
+}
+EOF
+
+            # Pasang Gradle CLI jika belum ada dan bina APK release yang ditandatangani
+            if ! command -v gradle >/dev/null 2>&1; then
+              curl -fsSL https://services.gradle.org/distributions/gradle-8.5-bin.zip -o gradle.zip
+              unzip -q gradle.zip -d /opt/gradle
+              rm -f gradle.zip
+              export PATH="/opt/gradle/gradle-8.5/bin:$PATH"
             fi
+
+            gradle assembleRelease --no-daemon
           fi
 
       - name: Muat Naik Fail APK sebagai Artifact
