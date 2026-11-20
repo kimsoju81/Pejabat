@@ -1,6 +1,26 @@
-# Pejabat
-Sut produktiviti serba lengkap yang menampilkan penyuntingan dokumen bergaya retro, alatan helaian kerja, dan pengarkiban teratur untuk pentadbiran Malaysia yang cekap
-https://friendly-mermaid-45aa1c.netlify.app/
-https://pejabat.my
-https://kimsoju81.github.io/Pejabat/
+# *"Pejabat**
+Sut produktiviti serba lengkap yang menampilkan penyuntingan dokumen bergaya retro, alatan helaian kerja, dan pengarkiban teratur untuk pentadbiran Malaysia yang ceka
+# Pejabat — Aplikasi kerja dokumentasi, grafik, animasi dan vlogger terilham dari Libreoffice, Gimp, Kdenlive, Canix dan Doory, tetapi berbahasa Melayu, ada percampuran bahasa inggeris yang tidak keterlaluan.
 
+---
+
+## 2. Pemasangan dan Cara Menjalankan Aplikasi
+
+```bash
+# 1. Pasang semua kebergantungan
+npm install
+
+# 2. Jalankan pelayan pembangunan (Vite)
+npm run dev
+
+# 3. Bina untuk produksi
+npm run build
+```
+
+---
+
+## 3. Polisi Penggunaan API Awam & Had Perkhidmatan
+
+Aplikasi ini menggunakan servis komuniti terbuka bagi tujuan prototaip dan pembangunan:
+
+  - Atribusi `hak cipta luaran` dipaparkan secara jelas dalam T&C. Jangan memuat turun secara pukal untuk kegunaan komersial.
