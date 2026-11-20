@@ -81,8 +81,18 @@ jobs:
             export JAVA_HOME
           fi
 
+          # Pastikan sdkmanager dan build-tools wujud serta boleh dibaca oleh Bubblewrap
+          test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          test -d "$ANDROID_HOME/platforms/android-34"
+          test -d "$ANDROID_HOME/build-tools/34.0.0"
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
 
+          # Kemas kini konfigurasi Bubblewrap secara rasmi menggunakan updateConfig
+          bubblewrap updateConfig \
+            --jdkPath="$JAVA_HOME" \
+            --androidSdkPath="$ANDROID_HOME" || true
+
+          # Tulis juga config.json secara langsung sebagai sandaran
           cat <<EOF > "$HOME/.bubblewrap/config.json"
           {
             "jdkPath": "$JAVA_HOME",
