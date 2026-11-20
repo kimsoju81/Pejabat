@@ -200,21 +200,11 @@ jobs:
               ICON_ATTRS='android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"'
             fi
 
-            python3 - <<PYEOF
-import os
+            printf "sdk.dir=%s\n" "$ANDROID_HOME" > local.properties
+            printf "rootProject.name = 'PejabatTWA'\ninclude ':app'\n" > settings.gradle
 
-sdk_home = os.environ["ANDROID_HOME"]
-workspace = os.environ["GITHUB_WORKSPACE"]
-icon_attrs = os.environ.get("ICON_ATTRS", "")
-
-with open("local.properties", "w", encoding="utf-8") as f:
-    f.write(f"sdk.dir={sdk_home}\n")
-
-with open("settings.gradle", "w", encoding="utf-8") as f:
-    f.write("rootProject.name = 'PejabatTWA'\ninclude ':app'\n")
-
-with open("build.gradle", "w", encoding="utf-8") as f:
-    f.write("""buildscript {
+            cat <<EOF > build.gradle
+buildscript {
     repositories {
         google()
         mavenCentral()
@@ -230,61 +220,61 @@ allprojects {
         mavenCentral()
     }
 }
-""")
+EOF
 
-with open("app/build.gradle", "w", encoding="utf-8") as f:
-    f.write(f"""plugins {{
+            cat <<EOF > app/build.gradle
+plugins {
     id 'com.android.application'
-}}
+}
 
-android {{
+android {
     namespace 'org.pejabat.app'
     compileSdk 34
 
-    defaultConfig {{
+    defaultConfig {
         applicationId "org.pejabat.app"
         minSdk 21
         targetSdk 34
         versionCode 1
         versionName "1.0.0"
-    }}
+    }
 
-    signingConfigs {{
-        release {{
-            storeFile file("{workspace}/android.keystore")
+    signingConfigs {
+        release {
+            storeFile file("$GITHUB_WORKSPACE/android.keystore")
             storePassword "pejabat123"
             keyAlias "pejabatkey"
             keyPassword "pejabat123"
-        }}
-    }}
+        }
+    }
 
-    buildTypes {{
-        release {{
+    buildTypes {
+        release {
             signingConfig signingConfigs.release
             minifyEnabled false
-        }}
-    }}
+        }
+    }
 
-    compileOptions {{
+    compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
-    }}
-}}
-""")
+    }
+}
+EOF
 
-with open("app/src/main/res/values/strings.xml", "w", encoding="utf-8") as f:
-    f.write("""<resources>
+            cat <<'EOF' > app/src/main/res/values/strings.xml
+<resources>
     <string name="app_name">Pejabat</string>
 </resources>
-""")
+EOF
 
-with open("app/src/main/AndroidManifest.xml", "w", encoding="utf-8") as f:
-    f.write(f"""<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            cat <<EOF > app/src/main/AndroidManifest.xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application
         android:allowBackup="true"
-        {icon_attrs}
+        $ICON_ATTRS
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
@@ -300,10 +290,10 @@ with open("app/src/main/AndroidManifest.xml", "w", encoding="utf-8") as f:
         </activity>
     </application>
 </manifest>
-""")
+EOF
 
-with open("app/src/main/java/org/pejabat/app/MainActivity.java", "w", encoding="utf-8") as f:
-    f.write("""package org.pejabat.app;
+            cat <<'EOF' > app/src/main/java/org/pejabat/app/MainActivity.java
+package org.pejabat.app;
 
 import android.app.Activity;
 import android.graphics.Color;
@@ -376,8 +366,7 @@ public class MainActivity extends Activity {
         }, 6000);
     }
 }
-""")
-PYEOF
+EOF
 
             rm -rf /opt/gradle/gradle-8.4 gradle.zip
             mkdir -p /opt/gradle
