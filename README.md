@@ -1,5 +1,6 @@
 # **Pejabat**
-Sut produktiviti serba lengkap yang menampilkan penyuntingan dokumen bergaya retro, alatan helaian kerja, dan pengarkiban teratur untuk pentadbiran Malaysia yang ceka
+Sut produktiviti serba lengkap yang menampilkan penyuntingan dokumen bergaya retro, alatan helaian kerja, dan pengarkiban teratur untuk pentadbiran Malaysia yang cekap.
+
 # Pejabat — Aplikasi kerja dokumentasi, grafik, animasi dan vlogger terilham dari Libreoffice, Gimp, Kdenlive, Canix dan Doory, tetapi berbahasa Melayu, ada percampuran bahasa inggeris yang tidak keterlaluan.
 
 ---
