@@ -14,6 +14,12 @@
     },
     {
       "origin": "https://app.pejabat.org"
+    },
+    {
+      "origin": "https://auth.pejabat.org"
+    },
+    {
+      "origin": "https://ms.pejabat.org"
     }
   ],
   "display": "standalone",
@@ -102,6 +108,7 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
+      "platform": "wide",
       "label": "Paparan Utama Ruang Kerja Pejabat"
     },
     {
@@ -109,13 +116,15 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Penyunting Dokumen Rasmi Surat"
+      "platform": "wide",
+      "label": "Penyunting Dokumen Rasmi Surat & Ruang Kerja"
     },
     {
       "src": "./screenshots/pejabat-mobile-narrow.png",
       "sizes": "720x1280",
       "type": "image/png",
       "form_factor": "narrow",
+      "platform": "narrow",
       "label": "Antara Muka Mudah Alih Pejabat"
     }
   ],
@@ -123,7 +132,7 @@
     {
       "name": "Surat",
       "short_name": "Surat",
-      "description": "Cipta atau sunting dokumen Surat",
+      "description": "Cipta atau sunting dokumen rasmi Surat",
       "url": "./index.html?module=surat",
       "icons": [
         {
@@ -136,8 +145,21 @@
     {
       "name": "Lembar",
       "short_name": "Lembar",
-      "description": "Buka jadual data dan formula Lembar",
+      "description": "Buka hamparan jadual data dan formula Lembar",
       "url": "./index.html?module=lembar",
+      "icons": [
+        {
+          "src": "./icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Bentang",
+      "short_name": "Bentang",
+      "description": "Bina slaid pembentangan Bentang",
+      "url": "./index.html?module=bentang",
       "icons": [
         {
           "src": "./icons/icon-192x192.png",
@@ -149,7 +171,7 @@
     {
       "name": "Layar",
       "short_name": "Layar",
-      "description": "Studio suntingan video Layar",
+      "description": "Studio suntingan video Layar dengan Stabil & Kabur",
       "url": "./index.html?module=layar",
       "icons": [
         {
@@ -162,7 +184,7 @@
     {
       "name": "Kalender",
       "short_name": "Kalender",
-      "description": "Semak acara dan peringatan Kalender",
+      "description": "Semak acara, tugasan dan peringatan Kalender",
       "url": "./index.html?module=kalender",
       "icons": [
         {
@@ -217,6 +239,9 @@
         "application/vnd.openxmlformats-officedocument.presentationml.presentation": [
           ".pptx"
         ],
+        "application/vnd.openxmlformats-officedocument.presentationml.slideshow": [
+          ".ppsx"
+        ],
         "application/vnd.ms-powerpoint": [
           ".ppt"
         ],
@@ -254,6 +279,9 @@
         ],
         "video/quicktime": [
           ".mov"
+        ],
+        "application/x-pejabat-layar": [
+          ".layar"
         ]
       }
     }
@@ -282,11 +310,13 @@
           "accept": [
             "image/*",
             "video/*",
+            "audio/*",
             "application/pdf",
             "text/plain",
             ".docx",
             ".xlsx",
             ".pptx",
+            ".ppsx",
             ".csv"
           ]
         }
